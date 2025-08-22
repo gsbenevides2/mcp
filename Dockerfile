@@ -16,9 +16,6 @@ COPY . .
 # Install dependencies
 RUN bun install
 
-# Custom Swagger
-RUN bun run swagger:build
-
 # Expose port 3000
 EXPOSE 3000
 
