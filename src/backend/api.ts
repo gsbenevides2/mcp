@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomUUIDv7 } from "bun";
 import { Elysia } from "elysia";
 import { mcp } from "elysia-mcp";
-import { AuthService } from "./services/AuthService";
+import { AuthService, UnauthorizedError } from "./services/AuthService";
 import { registerTools } from "./tools";
 
 const api = new Elysia().use(
@@ -22,14 +22,11 @@ const api = new Elysia().use(
 			const headers = context.request.headers;
 			const authorization = headers.get("authorization");
 			if (!authorization) {
-				return context.status(
-					"Unauthorized",
-					"Is missing Authorization header",
-				);
+				throw new UnauthorizedError();
 			}
 			const token = authorization.split(" ")[1];
 			if (!AuthService.verify(token)) {
-				return context.status("Unauthorized", "Your token is invalid");
+				throw new UnauthorizedError();
 			}
 			const sessionId = headers.get("mcp-session-id");
 
