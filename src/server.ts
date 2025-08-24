@@ -12,6 +12,10 @@ import { getEnv } from "./utils/getEnv";
 
 const app = logger(express());
 app.use((req, res, next) => {
+	if (req.path === "/health") {
+		next();
+		return;
+	}
 	const auth = req.headers["authorization"];
 	if (!auth || !AuthService.verify(auth.split(" ")[1])) {
 		res.status(401).send("Unauthorized");
