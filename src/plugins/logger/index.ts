@@ -1,5 +1,5 @@
-import { randomUUIDv7 } from "bun";
-import Elysia, { NotFoundError } from "elysia";
+import { randomUUID } from "node:crypto";
+import type express from "express";
 import {
 	duration,
 	formatArrow,
@@ -8,6 +8,19 @@ import {
 	formatStatus,
 	showInfo,
 } from "./formatters";
+
+// Extend Express Request interface to include custom properties
+declare global {
+	namespace Express {
+		interface Request {
+			context: {
+				operationId: string;
+				time: bigint;
+			};
+			error?: unknown;
+		}
+	}
+}
 
 function checkIfToResponse(
 	// biome-ignore lint/suspicious/noExplicitAny: I don't know what type this is
@@ -21,77 +34,77 @@ function checkIfToResponse(
 	return true;
 }
 
-export function logger() {
-	const app = new Elysia({
-		name: "logger-bene",
+export function logger(app: ReturnType<typeof express>) {
+	app.use((req, res, next) => {
+		const operationId = randomUUID();
+		const time = process.hrtime.bigint();
+		const method = req.method;
+		const path = req.path;
+
+		const ip = req.ip;
+		const port = req.socket.localPort;
+		const userAgent = req.headers["user-agent"];
+
+		req.context = {
+			operationId,
+			time,
+		};
+		res.setHeader("x-operation-id", operationId);
+
+		console.log(`${formatArrow("in")} ${formatMethod(method)} ${path}`);
+		console.log(showInfo("Received At:", formatDate(new Date())));
+		console.log(showInfo("Operation ID:", operationId));
+		console.log(showInfo("IP/Port:", `${ip}:${port}`));
+		console.log(showInfo("UA:", userAgent || "No UserAgent"));
+
+		next();
 	});
 
-	app
-
-		.onRequest((ctx) => {
-			const operationId = randomUUIDv7();
-			const time = process.hrtime.bigint();
-			const method = ctx.request.method;
-			const path = new URL(ctx.request.url).pathname;
-
-			const ip = ctx.server?.requestIP(ctx.request)?.address;
-			const port = ctx.server?.requestIP(ctx.request)?.port;
-			const userAgent = ctx.request.headers.get("user-agent");
-
-			ctx.store = {
-				operationId,
-				time,
-			};
-			ctx.set.headers["x-operation-id"] = operationId;
-
-			console.log(`${formatArrow("in")} ${formatMethod(method)} ${path}`);
-			console.log(showInfo("Received At:", formatDate(new Date())));
-			console.log(showInfo("Operation ID:", operationId));
-			console.log(showInfo("IP/Port:", `${ip}:${port}`));
-			console.log(showInfo("UA:", userAgent || "No UserAgent"));
-		})
-		.onAfterResponse({ as: "global" }, async (ctx) => {
-			const method = ctx.request.method;
-			const path = new URL(ctx.request.url).pathname;
-			if (ctx.response instanceof Error) return;
-			const { operationId, time } = ctx.store as {
-				operationId: string;
-				time: bigint;
-			};
+	app.use(async (req, res, next) => {
+		res.on("finish", async () => {
+			const method = req.method;
+			const path = req.path;
+			const { operationId, time } = req.context;
 			const timeDiff = Number(process.hrtime.bigint() - time) / 1000000;
-			let status = ctx.set.status;
-			if (ctx.error instanceof NotFoundError) {
-				status = 404;
-			}
+			const status = res.statusCode;
 
 			console.log(
-				`${formatArrow("out")} ${formatMethod(method)} ${path} | ${formatStatus(status as number)}`,
+				`${formatArrow("out")} ${formatMethod(method)} ${path} | ${formatStatus(status)}`,
 			);
 			console.log(showInfo("Operation ID:", operationId));
 			console.log(showInfo("Time:", duration(timeDiff)));
 			console.log(showInfo("Sent At:", formatDate(new Date())));
 
-			if (status && (Number(status) < 200 || Number(status) >= 300)) {
-				console.log(showInfo("Body:", JSON.stringify(ctx.body)));
-				const response = ctx.response instanceof Response ? ctx.response : null;
-				if (response?.bodyUsed === false) {
-					const body = await response.text();
-					console.log(showInfo("Response:", JSON.stringify(body)));
-				} else if (checkIfToResponse(ctx.error)) {
-					const response = ctx.error.toResponse() as Response;
-					const body = await response.text();
-					console.log(showInfo("Response:", JSON.stringify(body)));
-				} else if ("code" in ctx.error) {
-					console.log(showInfo("Response:", JSON.stringify(ctx.error.code)));
+			if (status && (status < 200 || status >= 300)) {
+				console.log(showInfo("Body:", JSON.stringify(req.body)));
+
+				// Log error information if available
+				if (req.error) {
+					if (checkIfToResponse(req.error)) {
+						const response = req.error.toResponse() as Response;
+						const body = await response.text();
+						console.log(showInfo("Response:", JSON.stringify(body)));
+					} else if (typeof req.error === "object" && "code" in req.error) {
+						console.log(
+							showInfo("Error Code:", JSON.stringify(req.error.code)),
+						);
+					} else if (typeof req.error === "string") {
+						console.log(showInfo("Error:", req.error));
+					} else {
+						console.log(showInfo("Error:", JSON.stringify(req.error)));
+					}
 				}
 			}
 			if (status === 401) {
-				const authorizationHeader = ctx.request.headers.get("authorization");
+				const authorizationHeader = req.headers["authorization"];
 				console.log(
 					showInfo("Authorization:", authorizationHeader || "No Authorization"),
 				);
 			}
 		});
+
+		next();
+	});
 
 	return app;
 }

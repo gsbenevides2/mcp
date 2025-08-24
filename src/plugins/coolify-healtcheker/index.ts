@@ -1,22 +1,7 @@
-import { Elysia, StatusMap, t } from "elysia";
+import express from "express";
 
-export const coolifyHealthChecker = new Elysia({
-	detail: {
-		summary: "Coolify Utils",
-		description: "Health check for coolify",
-	},
-}).get(
-	"/health",
-	() => {
-		return "OK";
-	},
-	{
-		tags: ["Coolify"],
-		response: {
-			[StatusMap["OK"]]: t.String({
-				description: "Health check for coolify",
-				examples: ["OK"],
-			}),
-		},
-	},
-);
+export const coolifyHealthChecker = express.Router();
+
+coolifyHealthChecker.get("/health", (_, res) => {
+	res.status(200).send("OK");
+});
