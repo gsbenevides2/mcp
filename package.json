@@ -19,11 +19,12 @@
 		"dev": "bun --watch src/server.ts",
 		"lint": "bunx --bun biome check --write",
 		"prepare": "husky",
-		"generate:clients": "bun run src/backend/clients/updateClientTypes.ts"
+		"generate:clients": "bun run src/clients/updateClientTypes.ts"
 	},
 	"dependencies": {
 		"-": "^0.0.1",
 		"@modelcontextprotocol/sdk": "^1.17.4",
+		"@spotify/web-api-ts-sdk": "^1.2.0",
 		"@types/express": "^5.0.3",
 		"@web-bee-ru/openapi-axios": "^0.0.6",
 		"axios": "^1.11.0",
