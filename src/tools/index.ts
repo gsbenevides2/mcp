@@ -27,6 +27,15 @@ import { GetTrainStatus } from "./home_assistant/train/getStatus";
 import { GetStreamerStatusTool } from "./home_assistant/twicth/getStatus";
 import { GetStreamerIdsTool } from "./home_assistant/twicth/getStreamerIds";
 import { MarkdownfyWebpage } from "./markdownfy/webpage";
+import { AddObservationsTool } from "./memory/addObservations";
+import { CreateEntitiesTool } from "./memory/createEntities";
+import { CreateRelationsTool } from "./memory/createRelations";
+import { DeleteEntitiesTool } from "./memory/deleteEntities";
+import { DeleteObservationsTool } from "./memory/deleteObservations";
+import { DeleteRelationsTool } from "./memory/deleteRelations";
+import { OpenNodesTool } from "./memory/openNodes";
+import { ReadGraphTool } from "./memory/readGraph";
+import { SearchNodesTool } from "./memory/searchNodes";
 
 export const toolList = [
 	new MarkdownfyWebpage(),
@@ -57,6 +66,15 @@ export const toolList = [
 	new GetStreamerIdsTool(),
 	new GetStreamerStatusTool(),
 	new GetTrainStatus(),
+	new ReadGraphTool(),
+	new SearchNodesTool(),
+	new OpenNodesTool(),
+	new CreateEntitiesTool(),
+	new CreateRelationsTool(),
+	new AddObservationsTool(),
+	new DeleteEntitiesTool(),
+	new DeleteObservationsTool(),
+	new DeleteRelationsTool(),
 ];
 
 export function registerTools(server: McpServer) {
