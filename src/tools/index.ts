@@ -4,6 +4,7 @@ import { googleToolsList } from "./google/toolList";
 import { homeAssistantToolsList } from "./home_assistant/toolsList";
 import { MarkdownfyWebpage } from "./markdownfy/webpage";
 import { memoryToolsList } from "./memory/toolList";
+import { CurrentTime } from "./time/currentTime";
 
 export const toolList = [
 	new SendDiscordMessageTool(),
@@ -11,6 +12,7 @@ export const toolList = [
 	...homeAssistantToolsList,
 	new MarkdownfyWebpage(),
 	...memoryToolsList,
+	new CurrentTime(),
 ];
 
 export function registerTools(server: McpServer) {
