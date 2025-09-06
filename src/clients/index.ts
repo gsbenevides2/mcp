@@ -3,6 +3,7 @@ import { type MethodType, OpenApiAxios } from "@web-bee-ru/openapi-axios";
 import Axios from "axios";
 import { getEnv } from "../utils/getEnv";
 import type { paths as DiscordPaths } from "./discord/types";
+import type { paths as GooglePaths } from "./google/types";
 import type { paths as HomeAssistantPlusPaths } from "./home-assistant-plus/types";
 
 type MediaType = `${string}/${string}`;
@@ -58,4 +59,9 @@ export const discordClient = createClient<DiscordPaths>(
 export const homeAssistantPlusClient = createClient<HomeAssistantPlusPaths>(
 	getEnv("HOME_ASSISTANT_PLUS_SERVICE_ENDPOINT"),
 	getEnv("HOME_ASSISTANT_PLUS_SERVICE_TOKEN"),
+);
+
+export const googleClient = createClient<GooglePaths>(
+	getEnv("GOOGLE_SERVICE_ENDPOINT"),
+	getEnv("GOOGLE_SERVICE_TOKEN"),
 );

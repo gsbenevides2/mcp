@@ -12,6 +12,10 @@ const clientsList = [
 		name: "discord",
 		endpoint: getEnv("DISCORD_SERVICE_ENDPOINT"),
 	},
+	{
+		name: "google",
+		endpoint: getEnv("GOOGLE_SERVICE_ENDPOINT"),
+	},
 ];
 const packageDir = resolve(import.meta.dirname, "..", "..");
 
