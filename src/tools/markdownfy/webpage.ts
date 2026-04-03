@@ -1,5 +1,4 @@
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
-import axios from "axios";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import { z } from "zod";
 import { AbstractTool, type OnErrorToolCallback } from "../AbstractTool";
@@ -43,8 +42,11 @@ export class MarkdownfyWebpage extends AbstractTool<Args> {
 	execute: ToolCallback<Args> = async (args) => {
 		const { url } = args;
 
-		const response = await axios.get<string>(url);
-		const html = response.data;
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const html = await response.text();
 
 		const markdown = NodeHtmlMarkdown.translate(html);
 		let markdResult = markdown;
@@ -63,8 +65,12 @@ export class MarkdownfyWebpage extends AbstractTool<Args> {
 					continue;
 				}
 
-				const response = await axios.get<string>(url);
-				const html = response.data;
+				const response = await fetch(url);
+				if (!response.ok) {
+					console.warn(`Failed to fetch ${url}: ${response.status}`);
+					continue;
+				}
+				const html = await response.text();
 				const markdown = NodeHtmlMarkdown.translate(html);
 				markdResult += markdown;
 				const newUrls = markdown.match(/https?:\/\/[^\s]+/g);
