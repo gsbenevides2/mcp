@@ -7,7 +7,7 @@ const args = {
 	lineCode: z
 		.number()
 		.min(1)
-		.max(13)
+		.max(17)
 		.describe(
 			"The code of the metro line (e.g., 1 for Line 1 - Blue, 2 for Line 2 - Green)",
 		),
