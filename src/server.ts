@@ -16,7 +16,6 @@ const ICON_PATH = join(process.cwd(), "assets/icons");
 const PUBLIC_ICON_PATHS = new Set([
 	"/health",
 	"/favicon.ico",
-	"/favicon.svg",
 	"/favicon-32x32.png",
 	"/favicon-16x16.png",
 	"/apple-touch-icon.png",
@@ -30,9 +29,7 @@ app.get("/favicon.ico", (_req, res) => {
 	res.sendFile(join(ICON_PATH, "favicon.ico"));
 });
 
-app.get("/favicon.svg", (_req, res) => {
 	res.type("image/svg+xml");
-	res.sendFile(join(ICON_PATH, "favicon.svg"));
 });
 
 app.get("/favicon-32x32.png", (_req, res) => {
