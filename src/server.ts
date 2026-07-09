@@ -29,9 +29,6 @@ app.get("/favicon.ico", (_req, res) => {
 	res.sendFile(join(ICON_PATH, "favicon.ico"));
 });
 
-	res.type("image/svg+xml");
-});
-
 app.get("/favicon-32x32.png", (_req, res) => {
 	res.sendFile(join(ICON_PATH, "favicon-32x32.png"));
 });
