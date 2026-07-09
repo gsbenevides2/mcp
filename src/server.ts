@@ -16,8 +16,9 @@ app.use((req, res, next) => {
 		next();
 		return;
 	}
-	const auth = req.headers["authorization"];
-	if (!auth || !AuthService.verify(auth.split(" ")[1])) {
+	const authHeader = req.headers["authorization"];
+	const token = authHeader?.split(" ")[1];
+	if (!AuthService.verify(token)) {
 		res.status(401).send("Unauthorized");
 		return;
 	}
