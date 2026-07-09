@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -11,8 +12,58 @@ import { registerTools } from "./tools";
 import { getEnv } from "./utils/getEnv";
 
 const app = logger(express());
+const ICON_PATH = join(process.cwd(), "assets/icons");
+const PUBLIC_ICON_PATHS = new Set([
+	"/health",
+	"/favicon.ico",
+	"/favicon-32x32.png",
+	"/favicon-16x16.png",
+	"/apple-touch-icon.png",
+	"/android-chrome-192x192.png",
+	"/android-chrome-512x512.png",
+	"/safari-pinned-tab.svg",
+	"/site.webmanifest",
+]);
+
+app.get("/favicon.ico", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "favicon.ico"));
+});
+
+	res.type("image/svg+xml");
+});
+
+app.get("/favicon-32x32.png", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "favicon-32x32.png"));
+});
+
+app.get("/favicon-16x16.png", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "favicon-16x16.png"));
+});
+
+app.get("/apple-touch-icon.png", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "apple-touch-icon.png"));
+});
+
+app.get("/android-chrome-192x192.png", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "android-chrome-192x192.png"));
+});
+
+app.get("/android-chrome-512x512.png", (_req, res) => {
+	res.sendFile(join(ICON_PATH, "android-chrome-512x512.png"));
+});
+
+app.get("/safari-pinned-tab.svg", (_req, res) => {
+	res.type("image/svg+xml");
+	res.sendFile(join(ICON_PATH, "safari-pinned-tab.svg"));
+});
+
+app.get("/site.webmanifest", (_req, res) => {
+	res.type("application/manifest+json");
+	res.sendFile(join(ICON_PATH, "site.webmanifest"));
+});
+
 app.use((req, res, next) => {
-	if (req.path === "/health") {
+	if (PUBLIC_ICON_PATHS.has(req.path)) {
 		next();
 		return;
 	}
