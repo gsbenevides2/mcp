@@ -1,7 +1,9 @@
 import { type MethodType, OpenApiAxios } from "@web-bee-ru/openapi-axios";
 
-import Axios from "axios";
+import Axios, { AxiosHeaders } from "axios";
+
 import { getEnv } from "../utils/getEnv";
+import { getAuthentikAccessToken } from "./authentik";
 import type { paths as DiscordPaths } from "./discord/types";
 import type { paths as GooglePaths } from "./google/types";
 import type { paths as HomeAssistantPlusPaths } from "./home-assistant-plus/types";
@@ -35,15 +37,27 @@ export type SchemaType = {
 
 export function createClient<T extends SchemaType>(
 	baseURL: string,
-	token: string,
+	getAuthorization: () => Promise<string>,
 ) {
 	const axios = Axios.create({
 		baseURL,
 		adapter: "fetch",
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: `${token}`,
 		},
+	});
+
+	axios.interceptors.request.use(async (config) => {
+		const authorization = await getAuthorization();
+		if (config.headers instanceof AxiosHeaders) {
+			config.headers.set("Authorization", authorization);
+		} else {
+			config.headers = {
+				...config.headers,
+				Authorization: authorization,
+			};
+		}
+		return config;
 	});
 
 	return new OpenApiAxios<T, "fetch">(axios, {
@@ -51,17 +65,34 @@ export function createClient<T extends SchemaType>(
 	});
 }
 
+const discordServiceEndpoint = getEnv("DISCORD_SERVICE_ENDPOINT");
+const discordServiceToken = getEnv("DISCORD_SERVICE_TOKEN");
+
+const homeAssistantPlusServiceEndpoint = getEnv(
+	"HOME_ASSISTANT_PLUS_SERVICE_ENDPOINT",
+);
+const homeAssistantPlusClientId = getEnv("HOME_ASSISTANT_PLUS_CLIENT_ID");
+
+const googleServiceEndpoint = getEnv("GOOGLE_SERVICE_ENDPOINT");
+const googleServiceClientId = getEnv("GOOGLE_SERVICE_CLIENT_ID");
+
 export const discordClient = createClient<DiscordPaths>(
-	getEnv("DISCORD_SERVICE_ENDPOINT"),
-	getEnv("DISCORD_SERVICE_TOKEN"),
+	discordServiceEndpoint,
+	async () => discordServiceToken,
 );
 
 export const homeAssistantPlusClient = createClient<HomeAssistantPlusPaths>(
-	getEnv("HOME_ASSISTANT_PLUS_SERVICE_ENDPOINT"),
-	getEnv("HOME_ASSISTANT_PLUS_SERVICE_TOKEN"),
+	homeAssistantPlusServiceEndpoint,
+	async () => {
+		const token = await getAuthentikAccessToken(homeAssistantPlusClientId);
+		return `Bearer ${token}`;
+	},
 );
 
 export const googleClient = createClient<GooglePaths>(
-	getEnv("GOOGLE_SERVICE_ENDPOINT"),
-	getEnv("GOOGLE_SERVICE_TOKEN"),
+	googleServiceEndpoint,
+	async () => {
+		const token = await getAuthentikAccessToken(googleServiceClientId);
+		return `Bearer ${token}`;
+	},
 );
